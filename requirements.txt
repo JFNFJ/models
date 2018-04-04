@@ -1,0 +1,12 @@
+luigi==2.7.2
+sqlalchemy
+dataset
+requests
+pandas
+h5py
+keras
+sklearn
+tensorflow
+elasticsearch==2.4.0
+elasticsearch_dsl==2.2.0
+Flask==0.12
