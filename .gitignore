@@ -1,0 +1,6 @@
+bin/
+.idea/
+.Python
+*.pyc
+*.h5
+*.hdf5
