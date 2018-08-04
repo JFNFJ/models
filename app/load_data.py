@@ -1,7 +1,9 @@
 import numpy as np
 from keras.preprocessing.sequence import _remove_long_seq
 
-def load_data(path='', num_words=None, skip_top=0, maxlen=None, seed=113, start_char=1, oov_char=2, index_from=3, **kwargs):
+
+def load_data(path='', num_words=None, skip_top=0, maxlen=None, seed=113, start_char=1, oov_char=2, index_from=3,
+              **kwargs):
     if kwargs:
         raise TypeError('Unrecognized keyword arguemnts: ' + str(kwargs))
 
@@ -12,10 +14,11 @@ def load_data(path='', num_words=None, skip_top=0, maxlen=None, seed=113, start_
     # Seed set to random
     np.random.seed(seed)
 
-    indices = np.arange(len(x_train)) # Returns a vector of indeces x-spaced
-    np.random.shuffle(indices) # Shuffle those numbers
-    x_train = x_train[indices] # Reorders the training set randomly
-    labels_train = labels_train[indices] # Reorders the labels with the same order as x_train, so labels matches each word
+    indices = np.arange(len(x_train))  # Returns a vector of indeces x-spaced
+    np.random.shuffle(indices)  # Shuffle those numbers
+    x_train = x_train[indices]  # Reorders the training set randomly
+    labels_train = labels_train[
+        indices]  # Reorders the labels with the same order as x_train, so labels matches each word
 
     # reorders the training set as well
     indices = np.arange(len(x_test))
@@ -30,16 +33,16 @@ def load_data(path='', num_words=None, skip_top=0, maxlen=None, seed=113, start_
         xs = [[start_char] + [w + index_from for w in x] for x in xs]
     elif index_from:
         xs = [[w + index_from for w in x] for x in xs]
-    
+
     if maxlen:
         xs, labels = _remove_long_seq(maxlen, xs, labels)
         if not xs:
             raise ValueError('After filtering for sequences shorter than maxlen=' +
                              str(maxlen) + ', no sequence was kept. '
-                             'Increase maxlen.')
+                                           'Increase maxlen.')
     if not num_words:
         num_words = max([max(x) for x in xs])
-    
+
     # 0 (padding), 1 (start), 2 (OOV)
     if oov_char is not None:
         xs = [[w if (skip_top <= w < num_words) else oov_char for w in x] for x in xs]

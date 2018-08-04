@@ -3,6 +3,7 @@ import re
 import itertools
 from collections import Counter
 
+
 def clean_str(string):
     """
     Tokenization/string cleaning for datasets.
@@ -22,6 +23,7 @@ def clean_str(string):
     string = re.sub(r"\?", " \? ", string)
     string = re.sub(r"\s{2,}", " ", string)
     return string.strip().lower()
+
 
 def load_data_and_labels(positive_examples_path, negative_examples_path):
     """
