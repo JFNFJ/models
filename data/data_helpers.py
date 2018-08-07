@@ -6,7 +6,6 @@ from collections import Counter
 
 def clean_str(string):
     """
-    Tokenization/string cleaning for all datasets except for SST.
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
     """
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
@@ -45,7 +44,6 @@ def load_data_and_labels():
     positive_labels = [[1, 0, 0] for _ in positive_examples]
     negative_labels = [[0, 0, 1] for _ in negative_examples]
     neutral_labels = [[0, 1, 0] for _ in neutral_examples]
-    #print(positive_labels)
     y = np.array(positive_labels + negative_labels + neutral_labels)
     return [x_text, y]
 

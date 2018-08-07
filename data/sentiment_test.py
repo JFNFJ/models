@@ -23,12 +23,10 @@ from keras.datasets import imdb
 from keras.layers import Dense, Dropout, Flatten, Input, MaxPooling1D, Convolution1D, Embedding
 from keras.layers.merge import Concatenate
 from keras.models import Model
-from keras.models import model_from_yaml
 from keras.preprocessing import sequence
 from sklearn import preprocessing
 
 import data_helpers
-from w2v import train_word2vec
 
 np.random.seed(0)
 
@@ -49,7 +47,7 @@ label_encoder.fit(categories_labels)
 # ---------------------- Parameters section -------------------
 #
 # Model type. See Kim Yoon's Convolutional Neural Networks for Sentence Classification, Section 3
-model_type = "CNN-non-static"  # CNN-rand|CNN-non-static|CNN-static
+model_type = "CNN-rand"  # CNN-rand|CNN-non-static|CNN-static
 
 # Data source
 data_source = "local_dir"  # keras_data_set|local_dir
@@ -123,14 +121,16 @@ print("Vocabulary Size: {:d}".format(len(vocabulary_inv)))
 
 # Prepare embedding layer weights and convert inputs for static model
 print("Model type is", model_type)
-if model_type in ["CNN-non-static", "CNN-static"]:
-    embedding_weights = train_word2vec(np.vstack((x_train, x_test)), vocabulary_inv, num_features=embedding_dim,
-                                       min_word_count=min_word_count, context=context)
-    if model_type == "CNN-static":
-        x_train = np.stack([np.stack([embedding_weights[word] for word in sentence]) for sentence in x_train])
-        x_test = np.stack([np.stack([embedding_weights[word] for word in sentence]) for sentence in x_test])
-        print("x_train static shape:", x_train.shape)
-        print("x_test static shape:", x_test.shape)
+if False:
+    print("sarasa")
+#if model_type in ["CNN-non-static", "CNN-static"]:
+    #embedding_weights = train_word2vec(np.vstack((x_train, x_test)), vocabulary_inv, num_features=embedding_dim,
+    #                                   min_word_count=min_word_count, context=context)
+    #if model_type == "CNN-static":
+    #    x_train = np.stack([np.stack([embedding_weights[word] for word in sentence]) for sentence in x_train])
+    #    x_test = np.stack([np.stack([embedding_weights[word] for word in sentence]) for sentence in x_test])
+    #    print("x_train static shape:", x_train.shape)
+    #    print("x_test static shape:", x_test.shape)
 
 elif model_type == "CNN-rand":
     embedding_weights = None

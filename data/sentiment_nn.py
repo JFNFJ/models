@@ -1,31 +1,11 @@
-"""
-Train convolutional network for sentiment analysis on IMDB corpus. Based on
-"Convolutional Neural Networks for Sentence Classification" by Yoon Kim
-http://arxiv.org/pdf/1408.5882v2.pdf
-For "CNN-rand" and "CNN-non-static" gets to 88-90%, and "CNN-static" - 85% after 2-5 epochs with following settings:
-embedding_dim = 50
-filter_sizes = (3, 8)
-num_filters = 10
-dropout_prob = (0.5, 0.8)
-hidden_dims = 50
-Differences from original article:
-- larger IMDB corpus, longer sentences; sentence length is very important, just like data size
-- smaller embedding dimension, 50 instead of 300
-- 2 filter sizes instead of original 3
-- fewer filters; original work uses 100, experiments show that 3-10 is enough;
-- random initialization is no worse than word2vec init on IMDB corpus
-- sliding Max Pooling instead of original Global Pooling
-"""
-
 import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.datasets import imdb
-from keras.layers import Dense, Dropout, Activation
+from keras.layers import Dense, Dropout
+from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import RMSprop
 from keras.preprocessing import sequence
-from sklearn import preprocessing
-from keras.losses import categorical_crossentropy
 
 import data_helpers
 
@@ -35,31 +15,27 @@ np.random.seed(0)
 
 # ---------------------- Model ----------------------
 #
+
 class Model:
     def __init__(self, verbose=0):
         self.model = None
         self.verbose = verbose
         self.callbacks = self.__build_model_callbacks()
 
-    def build(self, dropout=(0.5, 0.5, 0.8), learning_rate=0.01):
+    def build(self, max_words, learning_rate=0.001):
         self.model = Sequential()
-        self.model.add(Dense(1024, input_shape=(max_words,)))
-        self.model.add(Activation('relu'))
-        self.model.add(Dropout(dropout[0]))
-        self.model.add(Dense(512))
-        self.model.add(Activation('relu'))
-        self.model.add(Dropout(dropout[1]))
-        self.model.add(Dense(256))
-        self.model.add(Activation('sigmoid'))
-        self.model.add(Dropout(dropout[2]))
-        self.model.add(Dense(len(categories_labels)))
-        self.model.add(Activation('softmax'))
+        self.model.add(Dense(1024, input_shape=(max_words,), activation='relu'))
+        self.model.add(Dropout(0.5))
+        self.model.add(Dense(512, activation='softmax'))
+        self.model.add(Dropout(0.5))
+        self.model.add(Dense(512, activation='relu'))
+        self.model.add(Dropout(0.5))
+        self.model.add(Dense(3, activation='softmax'))
         self.model.compile(loss=categorical_crossentropy, optimizer=RMSprop(lr=learning_rate), metrics=["accuracy"])
         if self.verbose:
             print("\n\nModel summary")
             self.model.summary()
 
-    # Model callback
     def __build_model_callbacks(self):
         monitor = EarlyStopping(monitor='val_loss', min_delta=1e-3, patience=5, verbose=self.verbose, mode='auto')
         checkpoint = ModelCheckpoint(filepath='best_weights.hdf5', verbose=self.verbose, save_best_only=True)
@@ -73,6 +49,9 @@ class Model:
         self.model.fit(x, y, batch_size=batch_size, epochs=epochs, verbose=self.verbose, callbacks=callbacks,
                        validation_data=validation_data)
 
+    def evaluate(self, x, y, batch_size):
+        return self.model.evaluate(x, y, batch_size=batch_size)
+
 
 # ---------------------- Categories ----------------------
 #
@@ -84,10 +63,6 @@ class Model:
         - neutral:: [0, 1, 0]
     Unknown labels should be ignored
 """
-
-categories_labels = ['positive', 'neutral', 'negative']
-label_encoder = preprocessing.LabelEncoder()
-label_encoder.fit(categories_labels)
 
 # ---------------------- Parameters section -------------------
 #
@@ -142,9 +117,11 @@ def load_data(data_source, _verbose=0):
         x = x[shuffle_indices]
         y = y[shuffle_indices]
         train_len = int(len(x) * TRAINING_PERCENTAGE)
-        x_train = sequence.pad_sequences(x[:train_len], maxlen=sequence_length, padding="post", truncating="post")
+        #x_train = sequence.pad_sequences(x[:train_len], maxlen=sequence_length, padding="post", truncating="post")
+        x_train = x[:train_len]
         y_train = y[:train_len, :]
-        x_test = sequence.pad_sequences(x[train_len:], maxlen=sequence_length, padding="post", truncating="post")
+        #x_test = sequence.pad_sequences(x[train_len:], maxlen=sequence_length, padding="post", truncating="post")
+        x_test = x[train_len:]
         y_test = y[train_len:, :]
 
     vocabulary_inv[0] = "<PAD/>"
@@ -160,9 +137,18 @@ def load_data(data_source, _verbose=0):
 print("Loading data...")
 x_train, y_train, x_test, y_test, vocabulary_inv = load_data(data_source, _verbose=verbose)
 
-print("Training samples size:" + str(len(x_train)))
-print("Training labels size:" + str(len(y_train)))
-
+print("Creating model...")
 model = Model(verbose=verbose)
-model.build()
+model.build(x_train.shape[1], learning_rate=1e-2)
 model.train(x_train, y_train, validation_data=(x_test, y_test), callbacks=model.callbacks)
+score = model.evaluate(x_test, y_test, batch_size=128)
+print("SCORE: %s" % str(score))
+
+#   Predicting value
+#
+# phrase = "emerges as something rare , an issue movie that's so honest and keenly observed that it doesn't feel like one . "
+# tk = Tokenizer(num_words=max_words, lower=True, split=" ")
+# tk.fit_on_texts(phrase)
+# tokens = tk.texts_to_matrix([phrase])
+# r = model.model.predict(np.array(tokens))
+# print(r)
