@@ -1,11 +1,12 @@
 import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.datasets import imdb
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, Embedding, LSTM, Conv1D, MaxPooling1D
 from keras.losses import categorical_crossentropy
 from keras.models import Sequential
 from keras.optimizers import RMSprop
 from keras.preprocessing import sequence
+from keras.preprocessing.text import Tokenizer
 
 import data_helpers
 
@@ -24,12 +25,15 @@ class Model:
 
     def build(self, max_words, learning_rate=0.001):
         self.model = Sequential()
-        self.model.add(Dense(1024, input_shape=(max_words,), activation='relu'))
+        self.model.add(Embedding(len(vocabulary_inv)+1, 3, input_length=max_words))
         self.model.add(Dropout(0.5))
-        self.model.add(Dense(512, activation='softmax'))
-        self.model.add(Dropout(0.5))
-        self.model.add(Dense(512, activation='relu'))
-        self.model.add(Dropout(0.5))
+        self.model.add(Conv1D(64,
+                 5,
+                 padding='valid',
+                 activation='relu',
+                 strides=1))
+        self.model.add(MaxPooling1D(pool_size=4))
+        self.model.add(LSTM(50))
         self.model.add(Dense(3, activation='softmax'))
         self.model.compile(loss=categorical_crossentropy, optimizer=RMSprop(lr=learning_rate), metrics=["accuracy"])
         if self.verbose:
@@ -77,7 +81,6 @@ data_source = "local_dir"  # keras_data_set|local_dir
 embedding_dim = 50
 filter_sizes = (3, 8)
 num_filters = 10
-dropout_prob = (0.5, 0.8)
 hidden_dims = 50
 TRAINING_PERCENTAGE = 0.8
 
@@ -146,9 +149,9 @@ print("SCORE: %s" % str(score))
 
 #   Predicting value
 #
-# phrase = "emerges as something rare , an issue movie that's so honest and keenly observed that it doesn't feel like one . "
-# tk = Tokenizer(num_words=max_words, lower=True, split=" ")
-# tk.fit_on_texts(phrase)
-# tokens = tk.texts_to_matrix([phrase])
-# r = model.model.predict(np.array(tokens))
-# print(r)
+phrase = "emerges as something rare , an issue movie that's so honest and keenly observed that it doesn't feel like one . "
+tk = Tokenizer(num_words=x_train.shape[1], lower=True, split=" ")
+tk.fit_on_texts(phrase)
+tokens = tk.texts_to_matrix([phrase])
+r = model.model.predict(np.array(tokens))
+print(r)
