@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import numpy as np
 import re
 import itertools
@@ -8,6 +10,9 @@ def clean_str(string):
     """
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
     """
+    string = re.sub(r"rt", "", string, flags=re.IGNORECASE)
+    string = re.sub(r"(@[A-Za-z0-9]+)|([^0-9A-Za-zóíáéú \t])|(\w+:\/\/\S+)", "", string, flags=re.UNICODE)
+    string = re.sub(r"http\S+", "", string, flags=re.UNICODE)
     string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
     string = re.sub(r"\'s", " \'s", string)
     string = re.sub(r"\'ve", " \'ve", string)
