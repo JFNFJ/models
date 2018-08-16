@@ -149,4 +149,4 @@ print("SCORE: %s" % str(score))
 #
 #phrase = "emerges as one thing rare , an issue movie that's so honest and keenly observed that it does not feel like one . "
 phrase = "the plot is paper-thin and the characters aren't interesting enough to watch them go about their daily activities for two whole hours . "
-print(model.predict(max_words, phrase))
+print(model.model.predict(max_words, phrase))
