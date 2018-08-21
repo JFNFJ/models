@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, Dropout, Embedding, LSTM, Conv1D, MaxPooling1D
@@ -16,7 +17,7 @@ np.random.seed(0)
 #
 
 class Model:
-    def __init__(self, verbose=0, weights_path='/tmp/best_weights.hdf5'):
+    def __init__(self, weights_path, verbose=0):
         self.model = None
         self.verbose = verbose
         self.weights_path = weights_path
@@ -70,7 +71,7 @@ class NN:
     SEQUENCE_LENGTH = 280
     MAX_WORDS_LENGTH = SEQUENCE_LENGTH
 
-    def __init__(self, verbose=1):
+    def __init__(self, verbose=1, weights_path='/tmp/best_weights.hdf5'):
         self.verbose = verbose
 
         # Model Hyperparameters
@@ -82,7 +83,7 @@ class NN:
         self.x_train, self.y_train, self.x_test, self.y_test, self.vocabulary_inv = load_data(self.training_percentage,
                                                                                               verbose_level=self.verbose)
         # Model itself
-        self.model = Model(verbose=self.verbose)
+        self.model = Model(weights_path, verbose=self.verbose)
 
     def build(self):
         if self.verbose:
@@ -150,18 +151,18 @@ def load_data(training_percentage, verbose_level=0):
 # ---------------------- training and scoring ----------------------
 #
 
-nn = NN()
-nn.build()
-nn.train()
-nn.score()
-
-# ---------------------- Predicting value ----------------------
-#
-# phrase = "emerges as one thing rare , an issue movie that's so honest and keenly observed that it does not feel like one . "
+weight_file = '/tmp/best_weights.hdf5'
 phrase = "the plot is paper-thin and the characters aren't interesting enough to watch them go about their daily activities for two whole hours . "
-nn.predict(phrase)
+if not os.path.exists(weight_file):
+    nn_saved = NN(weights_path=weight_file)
+    nn_saved.build()
+    nn_saved.train()
+    nn_saved.score()
 
-nn1 = NN(verbose=0)
-nn1.build()
-nn1.load_weights()
-nn1.predict(phrase)
+    # Predicting value
+    nn_saved.predict(phrase)
+
+nn = NN(verbose=0, weights_path=weight_file)
+nn.build()
+nn.load_weights()
+nn.predict(phrase)
