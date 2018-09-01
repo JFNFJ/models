@@ -123,7 +123,7 @@ class NN:
 #
 
 def load_data(training_percentage, verbose_level=0):
-    x, y, vocabulary, vocabulary_inv_list = data_helpers.load_data("./data/en/rt-polarity")
+    x, y, vocabulary, vocabulary_inv_list = data_helpers.load_data("./data/es/dataset")
     vocabulary_inv = {key: value for key, value in enumerate(vocabulary_inv_list)}
 
     # Shuffle data
