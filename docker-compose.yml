@@ -1,0 +1,17 @@
+version: '3'
+services:
+  app:
+    image: proyecto-models
+    restart: always
+    networks:
+      - postgres-net
+      - redis-net
+    external_links:
+      - redis:redis
+      - postgres:postgres
+
+networks:
+  postgres-net:
+    external: true
+  redis-net:
+    external: true

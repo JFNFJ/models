@@ -5,6 +5,5 @@ h5py
 keras
 sklearn
 tensorflow
-elasticsearch==2.4.0
-elasticsearch_dsl==2.2.0
 redis==2.10.6
+python-dotenv==0.8.2
