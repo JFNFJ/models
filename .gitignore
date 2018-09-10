@@ -6,3 +6,4 @@ bin/
 *.hdf5
 lib/
 venv/
+.env
