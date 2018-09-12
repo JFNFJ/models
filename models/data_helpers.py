@@ -29,17 +29,17 @@ def clean_str(string):
     return string.strip().lower()
 
 
-def load_data_and_labels(path, file_extensions={'positive': '.pos', 'neutral': '.neu', 'negative': '.neg'}):
+def load_data_and_labels(files):
     """
     Loads MR polarity data from files, splits the data into words and generates labels.
     Returns split sentences and labels.
     """
     # Load data from files
-    positive_examples = list(open(path + file_extensions['positive']).readlines())
+    positive_examples = list(files['positive'].readlines())
     positive_examples = [s.strip() for s in positive_examples]
-    negative_examples = list(open(path + file_extensions['negative']).readlines())
+    negative_examples = list(files['negative'].readlines())
     negative_examples = [s.strip() for s in negative_examples]
-    neutral_examples = list(open(path + file_extensions['neutral']).readlines())
+    neutral_examples = list(files['neutral'].readlines())
     neutral_examples = [s.strip() for s in neutral_examples]
     # Split by words
     x_text = positive_examples + negative_examples + neutral_examples
@@ -91,13 +91,13 @@ def build_input_data(sentences, labels, vocabulary):
     return [x, y]
 
 
-def load_data(path):
+def load_data(files):
     """
     Loads and preprocessed data for the MR dataset.
     Returns input vectors, labels, vocabulary, and inverse vocabulary.
     """
     # Load and preprocess data
-    sentences, labels = load_data_and_labels(path)
+    sentences, labels = load_data_and_labels(files)
     sentences_padded = pad_sentences(sentences)
     vocabulary, vocabulary_inv = build_vocab(sentences_padded)
     x, y = build_input_data(sentences_padded, labels, vocabulary)

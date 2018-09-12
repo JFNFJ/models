@@ -1,4 +1,5 @@
 import os
+
 import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import Dense, Dropout, Embedding, LSTM, Conv1D, MaxPooling1D
@@ -7,7 +8,8 @@ from keras.models import Sequential
 from keras.optimizers import RMSprop
 from keras.preprocessing.text import Tokenizer
 
-import data_helpers
+from .data_helpers import load_data as _load_data
+from .data_helpers import clean_str
 
 # ---------------------- Initialize numpy ----------------------
 np.random.seed(0)
@@ -71,19 +73,19 @@ class NN:
     SEQUENCE_LENGTH = 280
     MAX_WORDS_LENGTH = SEQUENCE_LENGTH
 
-    def __init__(self, verbose=1, weights_path='/tmp/best_weights.hdf5'):
+    def __init__(self, language, verbose=1, weights_file='best_weights.hdf5',
+                 training_set_percentage=0.8):
         self.verbose = verbose
-
-        # Model Hyperparameters
-        self.training_percentage = 0.8
+        training_dataset_path = os.path.join(os.path.dirname(__file__), 'data/{}'.format(language))
 
         # Model data
         if self.verbose:
             print("Loading data...")
-        self.x_train, self.y_train, self.x_test, self.y_test, self.vocabulary_inv = load_data(self.training_percentage,
+        self.x_train, self.y_train, self.x_test, self.y_test, self.vocabulary_inv = load_data(training_set_percentage,
+                                                                                              training_dataset_path,
                                                                                               verbose_level=self.verbose)
         # Model itself
-        self.model = Model(weights_path, verbose=self.verbose)
+        self.model = Model('/tmp/{}_{}'.format(language, weights_file), verbose=self.verbose)
 
     def build(self):
         if self.verbose:
@@ -101,7 +103,7 @@ class NN:
         return
 
     def predict(self, phrase):
-        print(self.model.predict(len(self.x_train[0]), phrase))
+        return self.model.predict(len(self.x_train[0]), clean_str(phrase))
 
     def load_weights(self):
         self.model.load_weights()
@@ -122,8 +124,11 @@ class NN:
 # ---------------------- Data Preparation ----------------------
 #
 
-def load_data(training_percentage, verbose_level=0):
-    x, y, vocabulary, vocabulary_inv_list = data_helpers.load_data("./data/es/dataset")
+
+def load_data(training_percentage, training_dataset_path, verbose_level=0):
+    files = {file_type: open('{}/dataset.{}'.format(training_dataset_path, file_type[0:3])) for file_type in
+             ['positive', 'neutral', 'negative']}
+    x, y, vocabulary, vocabulary_inv_list = _load_data(files)
     vocabulary_inv = {key: value for key, value in enumerate(vocabulary_inv_list)}
 
     # Shuffle data
@@ -151,18 +156,13 @@ def load_data(training_percentage, verbose_level=0):
 # ---------------------- training and scoring ----------------------
 #
 
-weight_file = '/tmp/best_weights.hdf5'
 phrase = "the plot is paper-thin and the characters aren't interesting enough to watch them go about their daily activities for two whole hours . "
-if not os.path.exists(weight_file):
-    nn_saved = NN(weights_path=weight_file)
-    nn_saved.build()
-    nn_saved.train()
-    nn_saved.score()
 
-    # Predicting value
-    nn_saved.predict(phrase)
-
-nn = NN(verbose=0, weights_path=weight_file)
-nn.build()
-nn.load_weights()
-nn.predict(phrase)
+def load_nns():
+    nns = dict()
+    for language in ['es']:
+        nn = NN(language=language, verbose=1)
+        nn.build()
+        nn.train()
+        nns[language] = nn
+    return nns
