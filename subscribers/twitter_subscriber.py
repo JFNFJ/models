@@ -4,11 +4,12 @@ from datetime import datetime
 
 import pytz
 
+from database.models import db, Topic, GeneralResult, EvolutionResult, LocationResult
 from models.sentiment_nn import load_nns
+from settings import LOG_LEVEL
 from subscribers.base_subscriber import BaseSubscriber
 
-from settings import LOG_LEVEL
-from database.models import db, Topic, GeneralResult, EvolutionResult, LocationResult
+TW_DATE_FORMAT = '%a %b %d %H:%M:%S +0000 %Y'
 
 db.create_all()
 logging.basicConfig(format='[%(levelname)s:%(asctime)s] %(message)s', level=LOG_LEVEL)
@@ -29,8 +30,7 @@ class TwitterSubscriber(BaseSubscriber):
         if not topic.general_result:
             topic.general_result = GeneralResult(topic=topic, positive=0, neutral=0, negative=0)
 
-        tweet_date = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y').replace(
-            tzinfo=pytz.UTC).date()
+        tweet_date = datetime.strptime(tweet['created_at'], TW_DATE_FORMAT).replace(tzinfo=pytz.UTC).date()
         evolution_result = next(iter([er for er in topic.evolution_results if er.day == tweet_date]), None)
         if not evolution_result:
             evolution_result = EvolutionResult(topic=topic, day=tweet_date, positive=0, neutral=0, negative=0)
@@ -42,7 +42,7 @@ class TwitterSubscriber(BaseSubscriber):
             location_result = LocationResult(topic=topic, location=tweet_location, positive=0, neutral=0, negative=0)
             topic.location_results.append(location_result)
 
-        predicted_values = self.nns.get(tweet['lang']).predict(tweet['full_text'])[0]
+        predicted_values = self.nns.get(tweet['lang']).predict(tweet['text'])[0]
         argmax = predicted_values.argmax()
         if argmax == 0:
             topic.general_result.increment_positive()
