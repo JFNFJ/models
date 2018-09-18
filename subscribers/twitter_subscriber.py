@@ -37,33 +37,35 @@ class TwitterSubscriber(BaseSubscriber):
             topic.evolution_results.append(evolution_result)
 
         tweet_location = tweet['user']['location']
-        location_result = next(iter([lr for lr in topic.location_results if lr.location == tweet_location]), None)
-        if not location_result:
-            location_result = LocationResult(topic=topic, location=tweet_location, positive=0, neutral=0, negative=0)
-            topic.location_results.append(location_result)
+        location_result = None
+        if tweet_location:
+            location_result = next(iter([lr for lr in topic.location_results if lr.location == tweet_location]), None)
+            if not location_result:
+                location_result = LocationResult(topic=topic, location=tweet_location, positive=0, neutral=0, negative=0)
+                topic.location_results.append(location_result)
 
         predicted_values = self.nns.get(tweet['lang']).predict(tweet['text'])[0]
         argmax = predicted_values.argmax()
         if argmax == 0:
             topic.general_result.increment_positive()
             evolution_result.increment_positive()
-            location_result.increment_positive()
-        if argmax == 1:
+            if location_result:
+                location_result.increment_positive()
+        elif argmax == 1:
             topic.general_result.increment_neutral()
             evolution_result.increment_neutral()
-            location_result.increment_neutral()
-        if argmax == 2:
+            if location_result:
+                location_result.increment_neutral()
+        elif argmax == 2:
             topic.general_result.increment_negative()
             evolution_result.increment_negative()
-            location_result.increment_negative()
+            if location_result:
+                location_result.increment_negative()
         else:
             logging.error('Error index!')
 
         logging.debug("predicted_values: {}".format(predicted_values))
 
-        logging.debug(topic.general_result)
-        logging.debug(topic.evolution_results)
-        logging.debug(topic.location_results)
 
         db.session.add(topic)
         db.session.commit()
