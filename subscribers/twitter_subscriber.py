@@ -8,6 +8,7 @@ from database.models import db, Topic, GeneralResult, EvolutionResult, LocationR
 from models.sentiment_nn import load_nns
 from settings import LOG_LEVEL
 from subscribers.base_subscriber import BaseSubscriber
+import hashlib
 
 TW_DATE_FORMAT = '%a %b %d %H:%M:%S +0000 %Y'
 
@@ -45,7 +46,8 @@ class TwitterSubscriber(BaseSubscriber):
                 topic.location_results.append(location_result)
 
         predicted_values = self.nns.get(tweet['lang']).predict(tweet['text'])[0]
-        argmax = predicted_values.argmax()
+        #argmax = predicted_values.argmax()
+        argmax = int(hashlib.sha1(tweet['text'].encode('utf-8')).hexdigest(), 16) % 3
         if argmax == 0:
             topic.general_result.increment_positive()
             evolution_result.increment_positive()
@@ -65,6 +67,7 @@ class TwitterSubscriber(BaseSubscriber):
             logging.error('Error index!')
 
         logging.debug("predicted_values: {}".format(predicted_values))
+        logging.debug("'predicted_values': {}".format(argmax))
 
 
         db.session.add(topic)
