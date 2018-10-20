@@ -19,7 +19,7 @@ logging.basicConfig(format='[%(levelname)s:%(asctime)s] %(message)s', level=LOG_
 class TwitterSubscriber(BaseSubscriber):
     def __init__(self):
         super(TwitterSubscriber, self).__init__('twitter:stream')
-        self.nns = load_nns()
+        #self.nns = load_nns()
 
     def process_message(self, message):
         tweet = json.loads(message)
@@ -45,7 +45,7 @@ class TwitterSubscriber(BaseSubscriber):
                 location_result = LocationResult(topic=topic, location=tweet_location, positive=0, neutral=0, negative=0)
                 topic.location_results.append(location_result)
 
-        predicted_values = self.nns.get(tweet['lang']).predict(tweet['text'])[0]
+        #predicted_values = self.nns.get(tweet['lang']).predict(tweet['text'])[0]
         #argmax = predicted_values.argmax()
         argmax = int(hashlib.sha1(tweet['text'].encode('utf-8')).hexdigest(), 16) % 3
         if argmax == 0:
